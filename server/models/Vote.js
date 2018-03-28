@@ -23,9 +23,9 @@ module.exports = mongoose.model('Vote', schema({
     timestamps: true
 })
 .pre('save', function() {
-    console.log('created')
+    // console.log('created')
 })
 .pre('update', function() {
-    console.log('updated')
+    // console.log('updated')
 })
 )

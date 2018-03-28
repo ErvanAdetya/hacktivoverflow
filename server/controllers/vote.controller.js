@@ -1,6 +1,8 @@
 'use strict'
 const jwt = require('jsonwebtoken')
 const Vote = require('../models/Vote')
+const Answer = require('../models/Answer')
+const Question = require('../models/Question')
 
 module.exports = {
   voteQuestionCreate: (req, res) => {
@@ -51,8 +53,8 @@ module.exports = {
     Vote
       .find()
       .populate('answer')
-      .populate('question')
-      .populate('user')
+      // .populate('question')
+      // .populate('user')
       .exec()
       .then((votes) => {
           res.status(200).json({
@@ -215,7 +217,7 @@ module.exports = {
             .then((response) => {
               res.status(200).json({
                 message: `Successfully update vote!`,
-                response
+                vote
               })
             })
             .catch((err) => {
@@ -230,13 +232,18 @@ module.exports = {
             user: decoded.id,
             question: req.params.id
           })
-          newVote
           .save()
           .then((vote) => {
-            res.status(201).json({
-              message:'Vote for question successfully created!',
-              vote
-            })
+            Question
+              .findById(req.params.id)
+              .then((question) => {
+                question.votes.push(vote._id)
+                question.save()
+                res.status(201).json({
+                  message:'Vote for question successfully created!',
+                  vote
+                })
+              })
           })
           .catch((err) => {
             res.status(500).json({
@@ -263,9 +270,10 @@ module.exports = {
               {$set: updateValue}
             )
             .then((response) => {
+              vote.vote = !vote.vote
               res.status(200).json({
                 message: `Successfully update vote!`,
-                response
+                vote
               })
             })
             .catch((err) => {
@@ -275,25 +283,29 @@ module.exports = {
               })
             })
         } else {
-          let newVote = new Vote({
-            vote: req.body.vote || true,
+          new Vote({
+            vote: req.body.vote,
             user: decoded.id,
             answer: req.params.id
-          })
-          newVote
-          .save()
-          .then((vote) => {
-            res.status(201).json({
-              message:'Vote for answer successfully created!',
-              vote
+          }).save()
+            .then((vote) => {
+              Answer
+                .findById(req.params.id)
+                .then((answer) => {
+                  answer.votes.push(vote._id)
+                  answer.save()
+                  res.status(201).json({
+                    message:'Vote for answer successfully created!',
+                    vote
+                  })
+                })
             })
-          })
-          .catch((err) => {
-            res.status(500).json({
-              message:'Error creating new vote for answer!',
-              err
+            .catch((err) => {
+              res.status(500).json({
+                message:'Error creating new vote for answer!',
+                err
+              })
             })
-          })
         }
       })
   },

@@ -5,13 +5,11 @@ const Question = require('../models/Question')
 module.exports = {
   questionCreate: (req, res) => {
     let decoded = jwt.verify(req.headers.apptoken, process.env.JWT)
-    let newQuestion = new Question ({
+    new Question ({
       title: req.body.title,
       description: req.body.description,
       user: decoded.id
-    })
-    newQuestion
-      .save()
+    }).save()
       .then((question) => {
         res.status(201).json({
           message:'Question successfully created!',
@@ -28,7 +26,7 @@ module.exports = {
   questionReadAll: (req, res) => {
     Question
       .find()
-      .populate('user')
+      // .populate('user')
       .exec()
       .then((questions) => {
         res.status(200).json({
@@ -46,7 +44,16 @@ module.exports = {
   questionReadById: (req, res) => {
     Question
       .findById(req.params.id)
-      .populate('user')
+      .populate({
+        path:'user votes'
+      })
+      .populate({
+        path:'answers',
+        select:'answer votes user createdAt',
+        populate: {
+          path: 'votes user'
+        }
+      })      
       .exec()
       .then((question) => {
         res.status(200).json({
@@ -104,7 +111,7 @@ module.exports = {
       })
   },
   questionDelete: (req, res) => {
-    let decoded = jwt.verify(req.headers.apptoken, process.env.JWT)    
+    let decoded = jwt.verify(req.headers.apptoken, process.env.JWT)
     Question
       .findById(req.params.id)
       .then((question) => {

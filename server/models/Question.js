@@ -24,7 +24,9 @@ module.exports = mongoose.model('Question', schema({
     point: {
         type: Number,
         default: 0
-    }
+    },
+    votes: [{type: schema.Types.ObjectId, ref: 'Vote'}],
+    answers: [{type: schema.Types.ObjectId, ref: 'Answer'}]    
 }, {
     timestamps: true
 })

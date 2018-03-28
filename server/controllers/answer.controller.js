@@ -6,18 +6,22 @@ const Answer = require('../models/Answer')
 module.exports = {
   answerCreate: (req, res) => {
     let decoded = jwt.verify(req.headers.apptoken, process.env.JWT)
-    let newAnser = new Answer({
+    new Answer({
       answer: req.body.answer,
       question: req.params.questionId,
       user: decoded.id
-    })
-    newAnser
-      .save()
+    }).save()
       .then((answer) => {
-        res.status(201).json({
-          message:'Answer successfully created!',
-          answer
-        })
+        Question
+          .findById(req.params.questionId)
+          .then((question) => {
+            question.answers.push(answer._id)
+            question.save()
+            res.status(201).json({
+              message:'Answer successfully created!',
+              answer
+            })
+          })
       })
       .catch((err) => {
         res.status(500).json({
@@ -29,8 +33,8 @@ module.exports = {
   answerReadAll: (req, res) => {
     Answer
       .find()
-      .populate('user')
-      .populate('question')
+      .populate('user', ['username'])
+      // .populate('question')
       .exec()
       .then((answers) => {
         res.status(200).json({

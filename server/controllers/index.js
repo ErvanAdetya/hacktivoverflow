@@ -12,11 +12,16 @@ module.exports = {
           let flag = bcrypt.compareSync(req.body.password, user.password)
           if(flag) {
             let apptoken = jwt.sign({
-              id: user._id
+              id: user._id,
+              username: user.username,
+              email: user.email,
+              first_name: user.first_name,
+              last_name: user.last_name
             }, process.env.JWT)
             res.status(200).json({
               message: 'Signin successfull',
               user: {
+                id: user._id,
                 username: user.username,
                 email: user.email,
                 first_name: user.first_name,
@@ -33,10 +38,21 @@ module.exports = {
   },
   verifyToken: (req, res) => {
     try {
-      let decode = jwt.verify(req.headers.apptoken, process.env.JWT)
-      res.status(200).send(true)
+      let decoded = jwt.verify(req.headers.apptoken, process.env.JWT)
+      res.status(200).json({
+        status: true,
+        user: {
+          id: decoded.id,
+          username: decoded.username,
+          email: decoded.email,
+          first_name: decoded.first_name,
+          last_name: decoded.last_name
+        }
+      })
     } catch(err) {
-      res.status(500).send(false)
+      res.status(200).json({
+        status:false
+      })
     }
   }
 }
